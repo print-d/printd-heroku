@@ -24,9 +24,9 @@ app = Flask(__name__)
 def home():
     return 'Testing!'
 
-@app.route('/test', methods=['POST'])
-def generate_user():
-	return 'This is a test post'
+#@app.route('/test', methods=['POST'])
+#def generate_user():
+	#return 'This is a test post'
 	
 
 if __name__ == '__main__':
