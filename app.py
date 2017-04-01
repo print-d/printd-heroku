@@ -1,12 +1,6 @@
 import os
-#import psycopg2
-import requests
-import urlparse
-import uuid
 from flask import *
 
-urlparse.uses_netloc.append("postgres")
-URL = urlparse.urlparse(os.environ["DATABASE_URL"])
 
 
 
@@ -18,9 +12,6 @@ app = Flask(__name__)
 def home():
     return 'Testing!'
 
-#@app.route('/test', methods=['POST'])
-#def generate_user():
-	#return 'This is a test post'
 	
 
 if __name__ == '__main__':
