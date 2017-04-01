@@ -1,6 +1,5 @@
 import os
 from flask import *
-import psycopg2
 import urlparse
 
 
