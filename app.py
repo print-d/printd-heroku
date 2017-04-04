@@ -6,7 +6,7 @@ app = Flask(__name__)
 
 @app.route('/')
 def home():
-	hash = pbkdf2_sha256.hash("testpassword")
+	hash = pbkdf2_sha256.hash("turtle1")
 	return hash
 
 @app.route('/test', methods=['POST'])
