@@ -7,7 +7,7 @@ app = Flask(__name__)
 @app.route('/')
 def home():
 	hash = pbkdf2_sha256.hash("testpassword")
-    return hash
+	return hash
 
 @app.route('/test', methods=['POST'])
 def generate_user():
@@ -15,4 +15,4 @@ def generate_user():
 	
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
+	app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
