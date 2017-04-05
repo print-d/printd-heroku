@@ -9,8 +9,10 @@ app = Flask(__name__)
 @app.route('/')
 def home():
 	hash = pbkdf2_sha256.hash("turtle1")
-	answer = "Answer: " + pbkdf2_sha256.verify("turtle1", hash)
-	return answer
+	print("!*!*!**!!*!*!*!*!**!*!*!*!*!**!*!*!*!*!*!*!*")
+	print(pbkdf2_sha256.verify("turtle1", hash))
+	print("!*!*!*!*!*!*!**!*!*!*!*!*!*!**!!**!*!*!*!*!")
+	return hash
 
 @app.route('/test', methods=['POST'])
 def generate_user():
