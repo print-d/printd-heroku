@@ -1,6 +1,6 @@
 import os
 import psycopg2
-import urlparse
+from urllib.parse import urlparse
 from passlib.hash import pbkdf2_sha256
 from flask import *
 
