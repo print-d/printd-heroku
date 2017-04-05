@@ -9,7 +9,7 @@ app = Flask(__name__)
 @app.route('/')
 def home():
 	hash = pbkdf2_sha256.hash("turtle1")
-	answer = pbkdf2_sha256.verify("turtle1", hash)
+	answer = "Answer: " + pbkdf2_sha256.verify("turtle1", hash)
 	return answer
 
 @app.route('/test', methods=['POST'])
