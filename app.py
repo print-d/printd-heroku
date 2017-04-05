@@ -41,7 +41,7 @@ def generate_user():
 #	octo_key = pbkdf2_sha256.hash("testKey")
 #	pID = 1234
 #	cur.execute('INSERT INTO users (username, password, octoprint_API_code, printer_ID) VALUES (\'{0}\', \'{1}\', \'{2}\', \'{3}\');'.format(
-        username, password, octo_key, pID))
+#        username, password, octo_key, pID))
 #	conn.commit()
 	return 'This is a test post'
 	
