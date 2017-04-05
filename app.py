@@ -24,7 +24,7 @@ conn = psycopg2.connect(
 
 app = Flask(__name__)
 
-@app.route('/')
+@app.route('/', methods=["POST"])
 def home():
 	hash = pbkdf2_sha256.hash("turtle1")
 	print("!*!*!**!!*!*!*!*!**!*!*!*!*!**!*!*!*!*!*!*!*")
@@ -32,16 +32,17 @@ def home():
 	print("!*!*!*!*!*!*!**!*!*!*!*!*!*!**!!**!*!*!*!*!")
 	return hash
 
-@app.route('/test')
+
+@app.route('/test', methods=["POST"])
 def generate_user():
-	cur = conn.cursor()
-	username = "test"
-	password = pbkdf2_sha256.hash("test")
-	octo_key = pbkdf2_sha256.hash("testKey")
-	pID = 1234
-	cur.execute('INSERT INTO users (username, password, octoprint_API_code, printer_ID) VALUES (\'{0}\', \'{1}\', \'{2}\', \'{3}\');'.format(
+#	cur = conn.cursor()
+#	username = "test"
+#	password = pbkdf2_sha256.hash("test")
+#	octo_key = pbkdf2_sha256.hash("testKey")
+#	pID = 1234
+#	cur.execute('INSERT INTO users (username, password, octoprint_API_code, printer_ID) VALUES (\'{0}\', \'{1}\', \'{2}\', \'{3}\');'.format(
         username, password, octo_key, pID))
-	conn.commit()
+#	conn.commit()
 	return 'This is a test post'
 	
 
