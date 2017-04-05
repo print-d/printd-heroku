@@ -30,8 +30,16 @@ def home():
 	print("!*!*!*!*!*!*!**!*!*!*!*!*!*!**!!**!*!*!*!*!")
 	return hash
 
-@app.route('/test', methods=['POST'])
+@app.route('/test')
 def generate_user():
+	cur = conn.cursor()
+	username = "test"
+	password = pbkdf2_sha256.hash("test")
+	octo_key = pbkdf2_sha256.hash("testKey")
+	pID = 1234
+	cur.execute('INSERT INTO users Values (\'{0}\', \'{1}\', \'{2}\', \'{3}\');'.format(
+        username, password, octo_key, pID))
+	conn.commit()
 	return 'This is a test post'
 	
 
