@@ -18,7 +18,7 @@ conn = psycopg2.connect(
     password=url.password,
     host=url.hostname,
     port=url.port
-)
+
 
 
 
