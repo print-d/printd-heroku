@@ -1,47 +1,41 @@
 import os
-import psycopg2 as pc
-import urlparse
-import requests
-import json
-from passlib.hash import pbkdf2_sha256 as ps
+from user import User
 from flask import *
+from flask_login import LoginManager, UserMixin, login_required
 
-
-urlparse.uses_netloc.append("postgres")
-url = urlparse.urlparse(os.environ["DATABASE_URL"])
-
-conn = psycopg2.connect(
-    database=url.path[1:],
-    user=url.username,
-    password=url.password,
-    host=url.hostname,
-    port=url.port
-
-
+SECRET_KEY = os.environ.get('SECRET_KEY')
 
 app = Flask(__name__)
+login_manager = LoginManager()
+login_manager.init_app(app)
 
-@app.route('/', methods=["POST"])
-def home():
-	hash = pbkdf2_sha256.hash("turtle1")
-	print("!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*")
-	print(pbkdf2_sha256.verify("turtle1", hash))
-	print("!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*")
-	return hash
+@login_manager.request_loader
+def load_user(request):
+  token = request.headers.get('Authorization')
 
+  if token is None:
+    token = request.args.get('token')
+    
+  if token is not None:
+    username, password = token.split(":") #TODO: serialize this 
+    user_entry = User.get(username)
+    if user_entry is not None:
+      user = User(user_entry[0], user_entry[1])
+      if user.password == password:
+        return user
 
-@app.route('/test', methods=["POST"])
-def generate_user():
-#	cur = conn.cursor()
-#	username = "test"
-#	password = pbkdf2_sha256.hash("test")
-#	octo_key = pbkdf2_sha256.hash("testKey")
-#	pID = 1234
-#	cur.execute('INSERT INTO users (username, password, octoprint_API_code, printer_ID) VALUES (\'{0}\', \'{1}\', \'{2}\', \'{3}\');'.format(
-#        username, password, octo_key, pID))
-#	conn.commit()
-	return 'This is a test post'
-	
+    return None
+
+@app.route('/', methods=['GET'])
+def index():
+  return Response(response='HELLO WORLD!', status=200)
+
+@app.route('/protected/', methods=['GET'])
+@login_required
+def protected():
+  return Response(response='Hello Protected World!', status=200)
+
 
 if __name__ == '__main__':
-	app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
+  app.config['SECRET_KEY'] = SECRET_KEY 
+  app.run(port=5000, debug=True)
