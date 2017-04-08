@@ -1,12 +1,10 @@
 import os
-import psycopg2
+import psycopg2 as pc
 import urlparse
 import requests
 import json
-from passlib.hash import pbkdf2_sha256
+from passlib.hash import pbkdf2_sha256 as ps
 from flask import *
-
-
 
 
 urlparse.uses_netloc.append("postgres")
@@ -21,15 +19,14 @@ conn = psycopg2.connect(
 )
 
 
-
 app = Flask(__name__)
 
 @app.route('/', methods=["POST"])
 def home():
 	hash = pbkdf2_sha256.hash("turtle1")
-	print("!*!*!**!!*!*!*!*!**!*!*!*!*!**!*!*!*!*!*!*!*")
+	print("!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*")
 	print(pbkdf2_sha256.verify("turtle1", hash))
-	print("!*!*!*!*!*!*!**!*!*!*!*!*!*!**!!**!*!*!*!*!")
+	print("!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*!*")
 	return hash
 
 
