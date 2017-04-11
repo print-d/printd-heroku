@@ -1,3 +1,4 @@
 secret_key.py
 *.pyc
 old_app.py
+.vscode/
