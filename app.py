@@ -1,9 +1,12 @@
 import os
+import datetime
 import psycopg2
 import urlparse
+import uuid
 from user import User
 from flask import *
 from flask_login import LoginManager, login_required
+from werkzeug import generate_password_hash, check_password_hash
 
 # environment vars
 SECRET_KEY = os.environ.get('SECRET_KEY')
@@ -39,9 +42,15 @@ def open_db_conn():
 def create():
     error = None
     data = request.json
-    user = data['username']
-    pwd = data['password']
     
+    # required fields
+    user = data['Username']
+    pwd = generate_password_hash(data['Password'])
+    op_api = data['OP_APIKey']
+    printer_make = data['Make']
+    printer_model = data['Model']
+    token = uuid.uuid4()
+
     # check for blank entries
     if not user:
         error = 'Username required.'
@@ -51,11 +60,15 @@ def create():
     # open the database connection
     conn = open_db_conn()
     cur = conn.cursor()
+
+    # insert into user table
     stmt = 'INSERT INTO "User" ("Username", "Password") VALUES (\'{}\', \'{}\');'.format(user, pwd)
     cur.execute(stmt)
     response = 'Account created!'
     status = 200
 
+    # create session
+    stmt = 'insert into "SESSION" ("Username", "Token", "DateCreated") VALUES(\'{}\', \'{}\', \'{}\');'.format(user, token, datetime.datetime.now())
     # check for any last errors
     if error:
         response = error
@@ -159,6 +172,9 @@ def index():
 
 @app.route('/login/', methods=['POST'])
 def login():
+    # check username
+    # check password hash
+    # generate new session token & replace
     return
 
 
