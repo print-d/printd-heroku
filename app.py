@@ -1,5 +1,6 @@
 import os
 import datetime
+import json
 import psycopg2
 import urlparse
 import uuid
@@ -68,7 +69,9 @@ def create():
     status = 200
 
     # create session
-    stmt = 'insert into "SESSION" ("Username", "Token", "DateCreated") VALUES(\'{}\', \'{}\', \'{}\');'.format(user, token, datetime.datetime.now())
+    stmt = 'INSERT INTO "Session" ("Username", "Token", "DateCreated") VALUES(\'{}\', \'{}\', \'{}\');'.format(user, token, datetime.datetime.now())
+    cur.execute(stmt)
+
     # check for any last errors
     if error:
         response = error
@@ -78,7 +81,7 @@ def create():
     conn.close()
     return Response(response=response, status=status)
 
-
+# upload printer config files
 @app.route('/upload/', methods=['POST'])
 def upload():
     error = None
@@ -99,7 +102,7 @@ def upload():
     if not error:
         conn = open_db_conn()
         cur = conn.cursor()
-        stmt = 'INSERT INTO "Printer" ("PrinterData") VALUES ({})'.format(psycopg2.Binary(data))
+        stmt = 'INSERT INTO "PrinterConfig" ("ConfigData") VALUES ({});'.format(psycopg2.Binary(data))
         cur.execute(stmt)
         conn.commit()
         conn.close()
@@ -107,40 +110,25 @@ def upload():
     status = 200
     return Response(response=response, status=status)
 
+@app.route('/printerdata/', methods=['GET'])
+def printer_data():
+    error = None
+    status = 200
+    
+    conn = open_db_conn()
+    cur = conn.cursor()
+    stmt = 'SELECT * FROM "Printer";'
+    cur.execute(stmt)
 
-# @app.route('/edit/', methods=['POST'])
-# def edit():
-#   error = None
-#   data = request.json
-#   # user = data['username']
-#   # pwd = data['password']
-#   item = data['item']
-#   new_value = data['new_value']
+    for row in cur:
+        print(row)
+    # select * from "Printer" 
+    # for each row in printer
+    # add to json response
 
-#   if item == 'Username':
-#     item = 'Username'
-#   elif item == 'Password':
-#     item = 'Password'
-#   elif item == 'TV_Username':
-#     item = 'TV_Username'
-#   elif item == 'OP_APIKey':
-#     item = 'OP_APIKey'
-
-#   conn = open_db_conn()
-#   cur = conn.cursor()
-#   stmt = 'INSERT INTO "User" ("Username", "Password") VALUES (\'{}\', \'{}\');'.format(user, pwd)
-#   cur.execute(stmt)
-
-#   response = 'Account created!'
-#   status = 200
-
-#   if error:
-#     response = error
-#     status = 406
-#   else:
-#     conn.commit()
-#   conn.close()
-#   return Response(response=response, status=status)
+    # response = jsonify(title='Printer Data', )
+    response = json.dumps({'title': 'Printer Data', 'printers': [{'id': 1, 'make': 'Wanhao'}]})
+    return response
 
 ########################################################
 #
@@ -163,12 +151,6 @@ def load_user(request):
                 return user
 
     return None
-
-
-@app.route('/', methods=['GET'])
-def index():
-    return Response(response='HELLO WORLD!', status=200)
-
 
 @app.route('/login/', methods=['POST'])
 def login():
