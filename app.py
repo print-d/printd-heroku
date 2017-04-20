@@ -169,10 +169,26 @@ def get_dimensions():
 
     query = 'SELECT * FROM "Printer" WHERE "ID" = {};'.format(printer_id)
     cur.execute(query)
-    printer = cur.fetchone()[0]
+    printer = cur.fetchone()
     print(printer)
 
-    return Response(response='stuff', status=200)
+    printer = {
+        'id': printer[0], 
+        'make': printer[4], 
+        'model': printer[5], 
+        'x_size': printer[1], 
+        'y_size': printer[2], 
+        'z_size': printer[3]
+    }
+
+
+    data = json.dumps(printer)
+    response = app.response_class(
+        response=data,
+        status=200,
+        mimetype='application/json'
+    )
+    return response
 
 @app.route('/config/', methods=['GET'])
 def get_config_file():
