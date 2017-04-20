@@ -43,7 +43,8 @@ def open_db_conn():
 def create():
     error = None
     data = request.json
-    
+    print('THE STUFF IS HERE ~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~')
+    print(data)
     # required fields
     user = data['Username']
     pwd = generate_password_hash(data['Password'])
@@ -152,14 +153,30 @@ def printer_data():
 @app.route('/dimensions/', methods=['GET'])
 def get_dimensions():
     token = request.headers.get('Authorization')
+
     conn = open_db_conn()
     cur = conn.cursor()
-    query = 'SELECT "Username" FROM "Session" WHERE "Token" = \'{}\''.format(token)
 
+    query = 'SELECT "Username" FROM "Session" WHERE "Token" = \'{}\';'.format(token)
     cur.execute(query)
-    print(cur.fetchone()[0])
+    user = cur.fetchone()[0]
+    print(user)
+
+    query = 'SELECT "PrinterID" FROM "User" WHERE "Username" = \'{}\';'.format(user)
+    cur.execute(query)
+    printer_id = cur.fetchone()[0]
+    print(printer_id)
+
+    query = 'SELECT * FROM "Printer" WHERE "ID" = {};'.format(printer_id)
+    cur.execute(query)
+    printer = cur.fetchone()[0]
+    print(printer)
+
     return Response(response='stuff', status=200)
 
+@app.route('/config/', methods=['GET'])
+def get_config_file():
+    return Response(response='stuff', status=200)
 ########################################################
 #
 # This stuff is for reference
