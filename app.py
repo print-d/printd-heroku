@@ -65,7 +65,7 @@ def create():
     # insert into user table
     stmt = 'INSERT INTO "User" ("Username", "Password") VALUES (\'{}\', \'{}\');'.format(user, pwd)
     cur.execute(stmt)
-    response = 'Account created!'
+    response = str(token)
     status = 200
 
     # create session
