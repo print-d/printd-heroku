@@ -62,8 +62,18 @@ def create():
     conn = open_db_conn()
     cur = conn.cursor()
 
+    query = 'SELECT "ID" FROM "Printer" WHERE "Make" = \'{}\' AND "Model" = \'{}\';'.format(printer_make, printer_model)
+    cur.execute(query)
+    printer_id = cur.fetchone()[0]
+
+    query = 'SELECT "ID" FROM "PrinterConfig" WHERE "PrinterID" = {};'.format(printer_id)
+    cur.execute(query)
+    config_id = cur.fetchone()[0]
+
     # insert into user table
-    stmt = 'INSERT INTO "User" ("Username", "Password") VALUES (\'{}\', \'{}\');'.format(user, pwd)
+    stmt = '''INSERT INTO "User" ("Username", "Password", "OP_APIKey", "PrinterConfigID", "PrinterID") 
+        VALUES (\'{}\', \'{}\', \'{}\', {}, {});'''.format(user, pwd, op_api, config_id, printer_id)
+    print(stmt)
     cur.execute(stmt)
     response = str(token)
     status = 200
@@ -141,7 +151,14 @@ def printer_data():
 
 @app.route('/dimensions/', methods=['GET'])
 def get_dimensions():
-    return
+    token = request.headers.get('Authorization')
+    conn = open_db_conn()
+    cur = conn.cursor()
+    query = 'SELECT "Username" FROM "Session" WHERE "Token" = \'{}\''.format(token)
+
+    cur.execute(query)
+    print(cur.fetchone()[0])
+    return Response(response='stuff', status=200)
 
 ########################################################
 #
