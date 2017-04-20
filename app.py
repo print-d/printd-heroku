@@ -126,8 +126,14 @@ def printer_data():
     # for each row in printer
     # add to json response
 
+    data = json.dumps({'title': 'Printer Data', 'printers': [{'id': 1, 'make': 'Wanhao'}]})
     # response = jsonify(title='Printer Data', )
-    response = json.dumps({'title': 'Printer Data', 'printers': [{'id': 1, 'make': 'Wanhao'}]})
+    response = app.response_class(
+        response=data,
+        status=200,
+        mimetype='application/json'
+    )
+    
     return response
 
 ########################################################
@@ -167,4 +173,6 @@ def protected():
 
 
 if __name__ == '__main__':
-    app.run(port=5000, debug=True)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)
+    # app.run(port=5000, debug=True)
