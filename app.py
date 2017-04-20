@@ -120,14 +120,17 @@ def printer_data():
     stmt = 'SELECT * FROM "Printer";'
     cur.execute(stmt)
 
+    printers = []
     for row in cur:
-        print(row)
-    # select * from "Printer" 
-    # for each row in printer
-    # add to json response
+        printer = {'ID': row[0], 
+            'Make': row[4], 
+            'Model': row[5], 
+            'x_size': row[1], 
+            'y_size': row[2], 
+            'z_size': row[3]}
+        printers.append(printer)
 
-    data = json.dumps({'title': 'Printer Data', 'printers': [{'id': 1, 'make': 'Wanhao'}]})
-    # response = jsonify(title='Printer Data', )
+    data = json.dumps({'title': 'Printer Data', 'printers': printers})
     response = app.response_class(
         response=data,
         status=200,
