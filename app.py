@@ -122,9 +122,9 @@ def printer_data():
 
     printers = []
     for row in cur:
-        printer = {'ID': row[0], 
-            'Make': row[4], 
-            'Model': row[5], 
+        printer = {'id': row[0], 
+            'make': row[4], 
+            'model': row[5], 
             'x_size': row[1], 
             'y_size': row[2], 
             'z_size': row[3]}
@@ -138,6 +138,10 @@ def printer_data():
     )
     
     return response
+
+@app.route('/dimensions/', methods=['GET'])
+def get_dimensions():
+    return
 
 ########################################################
 #
