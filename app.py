@@ -39,18 +39,28 @@ def open_db_conn():
     return conn
 
 
+def authorize_user(token):
+    conn = open_db_conn()
+    cur = conn.cursor()
+
+    query = 'SELECT "Username" FROM "Session" WHERE "Token" = \'{}\';'.format(token)
+    cur.execute(query)
+    user = cur.fetchone()[0]
+
+    conn.close()
+    return user
+
 @app.route('/create/', methods=['POST'])
 def create():
     error = None
     data = request.json
-    print('THE STUFF IS HERE ~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~')
-    print(data)
+
     # required fields
-    user = data['Username']
-    pwd = generate_password_hash(data['Password'])
-    op_api = data['OP_APIKey']
-    printer_make = data['Make']
-    printer_model = data['Model']
+    user = data['username']
+    pwd = generate_password_hash(data['password'])
+    op_api = data['op_apikey']
+    printer_make = data['make']
+    printer_model = data['model']
     token = uuid.uuid4()
 
     # check for blank entries
@@ -74,7 +84,6 @@ def create():
     # insert into user table
     stmt = '''INSERT INTO "User" ("Username", "Password", "OP_APIKey", "PrinterConfigID", "PrinterID") 
         VALUES (\'{}\', \'{}\', \'{}\', {}, {});'''.format(user, pwd, op_api, config_id, printer_id)
-    print(stmt)
     cur.execute(stmt)
     response = str(token)
     status = 200
@@ -91,6 +100,56 @@ def create():
         conn.commit()
     conn.close()
     return Response(response=response, status=status)
+
+# edit user account data
+@app.route('/userdata/', methods=['GET', 'POST'])
+def user_data():
+    error = None
+    status = 200
+    token = request.headers.get('Authorization')
+
+    # return data on a user
+    if request.method == 'GET':
+        conn = open_db_conn()
+        cur = conn.cursor()
+
+        user = authorize_user(token)
+
+        query = 'SELECT * FROM "User" WHERE "Username" = \'{}\';'.format(user)
+        cur.execute(query)
+        data = cur.fetchone()
+        print(data)
+
+        conn.close()
+
+        data = {'id': data[0], 
+            'username': data[1], 
+            'op_apikey': data[3], 
+            'printerconfigid': data[4], 
+            'printerid': data[5] 
+        }
+
+        data = json.dumps(data)
+        response = app.response_class(
+            response=data,
+            status=200,
+            mimetype='application/json'
+        )
+        return response
+
+    # if a user is editing their account
+    elif request.method == 'POST':
+        data = request.json
+        user = data['username']
+        pwd = generate_password_hash(data['password'])
+        op_api = data['op_apikey']
+        printer_make = data['make']
+        printer_model = data['model']
+        return Response(response='POST request', status=200)
+    else:
+        error = 'Invalid request'
+        status = 406
+        return Response(response=error, status=status)
 
 # upload printer config files
 @app.route('/upload/', methods=['POST'])
@@ -121,6 +180,7 @@ def upload():
     status = 200
     return Response(response=response, status=status)
 
+# return all printer data, used during account creation to select a printer
 @app.route('/printerdata/', methods=['GET'])
 def printer_data():
     error = None
@@ -141,13 +201,14 @@ def printer_data():
             'z_size': row[3]}
         printers.append(printer)
 
+    conn.close()
+
     data = json.dumps({'title': 'Printer Data', 'printers': printers})
     response = app.response_class(
         response=data,
         status=200,
         mimetype='application/json'
     )
-    
     return response
 
 @app.route('/dimensions/', methods=['GET'])
@@ -157,20 +218,17 @@ def get_dimensions():
     conn = open_db_conn()
     cur = conn.cursor()
 
-    query = 'SELECT "Username" FROM "Session" WHERE "Token" = \'{}\';'.format(token)
-    cur.execute(query)
-    user = cur.fetchone()[0]
-    print(user)
+    user = authorize_user(token)
 
     query = 'SELECT "PrinterID" FROM "User" WHERE "Username" = \'{}\';'.format(user)
     cur.execute(query)
     printer_id = cur.fetchone()[0]
-    print(printer_id)
 
     query = 'SELECT * FROM "Printer" WHERE "ID" = {};'.format(printer_id)
     cur.execute(query)
     printer = cur.fetchone()
-    print(printer)
+
+    conn.close()
 
     printer = {
         'id': printer[0], 
@@ -181,7 +239,6 @@ def get_dimensions():
         'z_size': printer[3]
     }
 
-
     data = json.dumps(printer)
     response = app.response_class(
         response=data,
@@ -190,9 +247,37 @@ def get_dimensions():
     )
     return response
 
-@app.route('/config/', methods=['GET'])
+@app.route('/configfile/', methods=['GET'])
 def get_config_file():
-    return Response(response='stuff', status=200)
+    token = request.headers.get('Authorization')
+
+    conn = open_db_conn()
+    cur = conn.cursor()
+
+    query = 'SELECT "Username" FROM "Session" WHERE "Token" = \'{}\';'.format(token)
+    cur.execute(query)
+    user = cur.fetchone()[0]
+
+    query = 'SELECT "PrinterConfigID" FROM "User" WHERE "Username" = \'{}\';'.format(user)
+    cur.execute(query)
+    config_id = cur.fetchone()[0]
+    print(config_id)
+
+    query = 'SELECT "ConfigData" FROM "PrinterConfig" WHERE "ID" = {}'.format(config_id)
+    cur.execute(query)
+    config_file = cur.fetchone()[0]
+    print(config_file)
+
+    conn.close()
+
+    response = app.response_class(
+        response=config_file,
+        status=200,
+        mimetype='application/octet-stream'
+    )
+
+    return response
+
 ########################################################
 #
 # This stuff is for reference
