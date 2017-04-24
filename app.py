@@ -76,10 +76,12 @@ def create():
     query = 'SELECT "ID" FROM "Printer" WHERE "Make" = \'{}\' AND "Model" = \'{}\';'.format(printer_make, printer_model)
     cur.execute(query)
     printer_id = cur.fetchone()[0]
+    print('Printer ID: {}'.format(printer_id))
 
     query = 'SELECT "ID" FROM "PrinterConfig" WHERE "PrinterID" = {};'.format(printer_id)
     cur.execute(query)
     config_id = cur.fetchone()[0]
+    print('Config File ID: {}'.format(config_id))
 
     # insert into user table
     stmt = '''INSERT INTO "User" ("Username", "Password", "OP_APIKey", "PrinterConfigID", "PrinterID") 
@@ -100,6 +102,51 @@ def create():
         conn.commit()
     conn.close()
     return Response(response=response, status=status)
+
+
+@app.route('/login/', methods=['POST'])
+def login():
+    error = None
+    status = 200
+    response = None
+    data = request.json
+
+    user = data['username']
+    pwd = data['password']
+
+    conn = open_db_conn()
+    cur = conn.cursor()
+
+    query = 'SELECT "Password" FROM "User" WHERE "Username" = \'{}\';'.format(user)
+    cur.execute(query)
+
+    # check username
+    pwd_hash = cur.fetchone()
+    if pwd_hash != None:
+        pwd_hash = pwd_hash[0]
+    else:
+        return Response(response='Invalid username.', status=406)
+
+    # check password
+    if check_password_hash(pwd_hash, pwd):
+        response = 'Successfully logged in!'
+    else:
+        response = 'Invalid password.'
+        status = 406
+
+    # generate new session token & replace
+    token = uuid.uuid4()
+    stmt = 'UPDATE "Session" SET "Token" = \'{}\', "DateCreated" = \'{}\' WHERE "Username" = \'{}\';'.format(token, datetime.datetime.now(), user)
+    try:
+        cur.execute(stmt)
+        conn.commit()
+    except Exception:
+        response = 'Error: login failed.'
+
+    conn.close()
+
+    return Response(response=response, status=status)
+
 
 # edit user account data
 @app.route('/userdata/', methods=['GET', 'POST'])
@@ -145,6 +192,8 @@ def user_data():
         op_api = data['op_apikey']
         printer_make = data['make']
         printer_model = data['model']
+        # if user:
+
         return Response(response='POST request', status=200)
     else:
         error = 'Invalid request'
@@ -299,14 +348,6 @@ def load_user(request):
                 return user
 
     return None
-
-@app.route('/login/', methods=['POST'])
-def login():
-    # check username
-    # check password hash
-    # generate new session token & replace
-    return
-
 
 @app.route('/protected/', methods=['GET'])
 @login_required
