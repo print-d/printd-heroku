@@ -136,6 +136,7 @@ def login():
 
     # generate new session token & replace
     token = uuid.uuid4()
+    response = str(token)
     stmt = 'UPDATE "Session" SET "Token" = \'{}\', "DateCreated" = \'{}\' WHERE "Username" = \'{}\';'.format(token, datetime.datetime.now(), user)
     try:
         cur.execute(stmt)
