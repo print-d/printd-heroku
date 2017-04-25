@@ -188,14 +188,51 @@ def user_data():
     # if a user is editing their account
     elif request.method == 'POST':
         data = request.json
-        user = data['username']
-        pwd = generate_password_hash(data['password'])
-        op_api = data['op_apikey']
-        printer_make = data['make']
-        printer_model = data['model']
-        # if user:
+        if not data:
+            return Response(response='Error! No data received.', status=406)
 
-        return Response(response='POST request', status=200)
+        new_user = data['username']
+        new_pwd = generate_password_hash(data['password'])
+        new_op_api = data['op_apikey']
+        new_printer_make = data['make']
+        new_printer_model = data['model']
+
+        conn = open_db_conn()
+        cur = conn.cursor()
+
+        user = authorize_user(token)
+        updated = []
+        print(user)
+        print(data)
+
+        if new_user:
+            return Response(response='Error! Username cannot be changed.', status=406)
+
+        if new_pwd:
+            stmt = 'UPDATE "User" SET "Password" = \'{}\' WHERE "Username" = \'{}\';'.format(generate_password_hash(new_pwd), user)
+            cur.execute(stmt)
+            # conn.commit()
+            updated.append('password')
+        if new_op_api:
+            stmt = 'UPDATE "User" SET "OP_APIKey" = \'{}\' WHERE "Username" = \'{}\';'.format(new_op_api, user)
+            cur.execute(stmt)
+            # conn.commit()
+            updated.append('Octoprint API key')
+        if new_printer_make and new_printer_model:
+            query = 'SELECT "ID" FROM "Printer" WHERE "Make" = \'{}\' AND "Model" = \'{}\';'.format(new_printer_make, new_printer_model)
+            cur.execute(query)
+            printer_id = cur.fetchone()[0]
+            print('Printer ID: {}'.format(printer_id))
+            stmt = 'UPDATE "User" SET "PrinterID" = \'{}\' WHERE "Username" = \'{}\';'.format(printer_id, user)
+            cur.execute(stmt)
+            updated.append('printer make & model')
+        
+        conn.commit()
+        conn.close()
+        updated = ', '.join(str(x) for x in updated)
+        response = 'Successfully updated {}.'.format(updated)
+
+        return Response(response=response, status=200)
     else:
         error = 'Invalid request'
         status = 406
@@ -327,6 +364,10 @@ def get_config_file():
     )
 
     return response
+
+@app.route('/configfilelist/', methods=['GET'])
+def get_config_file_list():
+    return
 
 ########################################################
 #
