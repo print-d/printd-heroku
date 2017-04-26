@@ -207,17 +207,17 @@ def user_data():
 
         if new_user:
             return Response(response='Error! Username cannot be changed.', status=406)
-
+        # update password
         if new_pwd:
             stmt = 'UPDATE "User" SET "Password" = \'{}\' WHERE "Username" = \'{}\';'.format(generate_password_hash(new_pwd), user)
             cur.execute(stmt)
-            # conn.commit()
             updated.append('password')
+        # update api key
         if new_op_api:
             stmt = 'UPDATE "User" SET "OP_APIKey" = \'{}\' WHERE "Username" = \'{}\';'.format(new_op_api, user)
             cur.execute(stmt)
-            # conn.commit()
             updated.append('Octoprint API key')
+        # update make/model
         if new_printer_make and new_printer_model:
             query = 'SELECT "ID" FROM "Printer" WHERE "Make" = \'{}\' AND "Model" = \'{}\';'.format(new_printer_make, new_printer_model)
             cur.execute(query)
@@ -243,11 +243,12 @@ def user_data():
 def upload():
     error = None
     file = request.files['config_file']
+    filename = file.filename
     data = None
     status = 200
 
     # check to see if the file is OK
-    if file and allowed_file(file.filename):
+    if file and allowed_file(filename):
         try:
             print 'file is acceptable'
             data = file.read()
@@ -259,7 +260,7 @@ def upload():
     if not error:
         conn = open_db_conn()
         cur = conn.cursor()
-        stmt = 'INSERT INTO "PrinterConfig" ("ConfigData") VALUES ({});'.format(psycopg2.Binary(data))
+        stmt = 'INSERT INTO "PrinterConfig" ("ConfigData", "Filename") VALUES ({}, {});'.format(psycopg2.Binary(data), filename)
         cur.execute(stmt)
         conn.commit()
         conn.close()
@@ -334,6 +335,7 @@ def get_dimensions():
     )
     return response
 
+# returns config file multipart of config file associated w/ your printer 
 @app.route('/configfile/', methods=['GET'])
 def get_config_file():
     token = request.headers.get('Authorization')
@@ -365,9 +367,37 @@ def get_config_file():
 
     return response
 
+# returns list of config files associated with your printer
 @app.route('/configfilelist/', methods=['GET'])
 def get_config_file_list():
-    return
+    token = request.headers.get('Authorization')
+    user = authorize_user(token)
+
+    conn = open_db_conn()
+    cur = conn.cursor()
+
+    query = 'SELECT "PrinterID" FROM "User" WHERE "Username" = \'{}\';'.format(user) 
+    cur.execute(query)
+    printer_id = cur.fetchone()[0]
+    print(printer_id)
+
+    query = 'SELECT * FROM "PrinterConfig" WHERE "PrinterID" = {};'.format(printer_id)
+    cur.execute(query)
+
+    files = []
+    for row in cur:
+        print(row)
+        file = {'id': row[0],
+                'printerid': row[2],
+                'filename': row[3]
+        }
+        files.append(file) 
+
+    print(files)
+    conn.close()
+    response = json.dumps(files)
+
+    return Response(response=response, status=200)
 
 ########################################################
 #
