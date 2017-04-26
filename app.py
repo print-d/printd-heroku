@@ -168,13 +168,22 @@ def user_data():
         data = cur.fetchone()
         print(data)
 
+        query = 'SELECT * FROM "Printer" WHERE "ID" = {};'.format(data[5])
+        cur.execute(query)
+        printer = cur.fetchone()
+        print(printer)
+
+        make = printer[4]
+        model = printer[5]
         conn.close()
 
         data = {'id': data[0], 
             'username': data[1], 
             'op_apikey': data[3], 
             'printerconfigid': data[4], 
-            'printerid': data[5] 
+            'printerid': data[5],
+            'make': make,
+            'model': model
         }
 
         data = json.dumps(data)
