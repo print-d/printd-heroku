@@ -12,6 +12,8 @@ from werkzeug import generate_password_hash, check_password_hash
 # environment vars
 SECRET_KEY = os.environ.get('SECRET_KEY')
 DATABASE_URL = os.environ.get('DATABASE_URL')
+THINGIVERSE_CLIENT_ID = os.environ.get('THINGIVERSE_CLIENT_ID')
+THINGIVERSE_CLIENT_SECRET = os.environ.get('THINGIVERSE_CLIENT_SECRET')
 
 # set up our app
 app = Flask(__name__)
@@ -20,7 +22,7 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 
 # parameters for upload
-ALLOWED_EXTENSIONS = set(['ini'])
+ALLOWED_EXTENSIONS = set(['ini', 'json'])
 
 
 def allowed_file(filename):
@@ -49,6 +51,21 @@ def authorize_user(token):
 
     conn.close()
     return user
+
+@app.route('/authenticatethingiverse/', methods=['POST'])
+def auth_tv():
+    token = request.headers.get('Authorization')
+    user = authorize_user(token)
+    data = request.json
+    code = data['code']
+    print(code)
+    res = requests.post('https://www.thingiverse.com/login/oauth/access_token?')
+    # POST https://www.thingiverse.com/login/oauth/access_token form url encoded
+    # params:
+    # client_id
+    # client_secret
+    # code
+    return Response(response='stuff', status=200)
 
 @app.route('/create/', methods=['POST'])
 def create():
@@ -274,17 +291,21 @@ def upload():
         except Exception:
             error = 'Error: Could not read file.'
             status = 400
+    else:
+        error = 'Error: invalid filetype.'
+        status = 406
+        # return Response(response='Error: invalid file type.', status=406)
 
     # if we didn't run into any problems, upload to db
     if not error:
         conn = open_db_conn()
         cur = conn.cursor()
-        stmt = 'INSERT INTO "PrinterConfig" ("ConfigData", "Filename") VALUES ({}, {});'.format(psycopg2.Binary(data), filename)
+        stmt = 'INSERT INTO "PrinterConfig" ("ConfigData", "Filename") VALUES ({}, \'{}\');'.format(psycopg2.Binary(data), filename)
         cur.execute(stmt)
         conn.commit()
         conn.close()
-    response = 'Printer configuration file uploaded!'
-    status = 200
+        response = 'Printer configuration file uploaded!'
+        status = 200
     return Response(response=response, status=status)
 
 # return all printer data, used during account creation to select a printer
@@ -378,13 +399,13 @@ def get_config_file():
 
     conn.close()
 
-    response = app.response_class(
-        response=config_file,
-        status=200,
-        mimetype='application/octet-stream'
-    )
+    # response = app.response_class(
+    #     response=config_file,
+    #     status=200,
+    #     mimetype='application/octet-stream'
+    # )
 
-    return response
+    return Response(response=config_file, status=200)
 
 # returns list of config files associated with your printer
 @app.route('/configfilelist/', methods=['GET'])
@@ -418,35 +439,6 @@ def get_config_file_list():
 
     return Response(response=response, status=200)
 
-########################################################
-#
-# This stuff is for reference
-#
-########################################################
-
-@login_manager.request_loader
-def load_user(request):
-    token = request.headers.get('Authorization')
-
-    if token is None:
-        token = request.args.get('token')
-    if token is not None:
-        username, password = token.split(":")  # TODO: serialize this
-        user_entry = User.get(username)
-        if user_entry is not None:
-            user = User(user_entry[0], user_entry[1])
-            if user.password == password:
-                return user
-
-    return None
-
-@app.route('/protected/', methods=['GET'])
-@login_required
-def protected():
-    return Response(response='Hello Protected World!', status=200)
-
-
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
-    # app.run(port=5000, debug=True)
