@@ -2,6 +2,7 @@ import os
 import datetime
 import json
 import psycopg2
+import requests
 import urlparse
 import uuid
 from user import User
@@ -59,13 +60,20 @@ def auth_tv():
     data = request.json
     code = data['code']
     print(code)
-    res = requests.post('https://www.thingiverse.com/login/oauth/access_token?')
-    # POST https://www.thingiverse.com/login/oauth/access_token form url encoded
-    # params:
-    # client_id
-    # client_secret
-    # code
-    return Response(response='stuff', status=200)
+    print(THINGIVERSE_CLIENT_ID)
+    print(THINGIVERSE_CLIENT_SECRET)
+
+    # POST https://www.thingiverse.com/login/oauth/access_token 
+    res = requests.post('https://www.thingiverse.com/login/oauth/access_token?client_id={}&client_secret={}&code={}'.format(THINGIVERSE_CLIENT_ID, THINGIVERSE_CLIENT_SECRET, code))
+    res = res.text
+    print(res)
+    access_token = res.split('&')[0]
+    access_token = res.split('=')[1]
+    # print(tv_token)
+
+    # POST https://www.thingiverse.com/login/oauth/tokeninfo
+    # res = resquests.post('https://www.thingiverse.com/login/oauth/tokeninfo?access_token={}'.format(access_token))
+    return Response(response=access_token, status=200)
 
 @app.route('/create/', methods=['POST'])
 def create():
@@ -214,6 +222,8 @@ def user_data():
     # if a user is editing their account
     elif request.method == 'POST':
         data = request.json
+        print(data)
+        
         if not data:
             return Response(response='Error! No data received.', status=406)
 
@@ -398,12 +408,6 @@ def get_config_file():
     print(config_file)
 
     conn.close()
-
-    # response = app.response_class(
-    #     response=config_file,
-    #     status=200,
-    #     mimetype='application/octet-stream'
-    # )
 
     return Response(response=config_file, status=200)
 
