@@ -231,7 +231,6 @@ def user_data():
         new_pwd = None
         if data.get('password'):
             new_pwd = generate_password_hash(data.get('password'))
-        else:
         new_op_api = data.get('op_apikey', None)
         new_printer_config = data.get('printerconfigid', None)
         new_printer_make = data.get('make', None)
