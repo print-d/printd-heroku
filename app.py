@@ -194,6 +194,7 @@ def user_data():
         new_user = data['username']
         new_pwd = generate_password_hash(data['password'])
         new_op_api = data['op_apikey']
+        new_printer_config = data['printerconfigid']
         new_printer_make = data['make']
         new_printer_model = data['model']
 
@@ -207,16 +208,25 @@ def user_data():
 
         if new_user:
             return Response(response='Error! Username cannot be changed.', status=406)
+
         # update password
         if new_pwd:
             stmt = 'UPDATE "User" SET "Password" = \'{}\' WHERE "Username" = \'{}\';'.format(generate_password_hash(new_pwd), user)
             cur.execute(stmt)
             updated.append('password')
+
         # update api key
         if new_op_api:
             stmt = 'UPDATE "User" SET "OP_APIKey" = \'{}\' WHERE "Username" = \'{}\';'.format(new_op_api, user)
             cur.execute(stmt)
             updated.append('Octoprint API key')
+
+        # update printer config file id
+        if new_printer_config:
+            stmt = 'UPDATE "User" SET "PrinterConfigID" = {} WHERE "Username" = \'{}\';'.format(new_printer_config, user)
+            cur.execute(stmt)
+            updated.append('printer config id')
+
         # update make/model
         if new_printer_make and new_printer_model:
             query = 'SELECT "ID" FROM "Printer" WHERE "Make" = \'{}\' AND "Model" = \'{}\';'.format(new_printer_make, new_printer_model)
