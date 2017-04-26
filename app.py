@@ -223,16 +223,16 @@ def user_data():
     elif request.method == 'POST':
         data = request.json
         print(data)
-        
+
         if not data:
             return Response(response='Error! No data received.', status=406)
 
-        new_user = data['username']
-        new_pwd = generate_password_hash(data['password'])
-        new_op_api = data['op_apikey']
-        new_printer_config = data['printerconfigid']
-        new_printer_make = data['make']
-        new_printer_model = data['model']
+        new_user = data.get('username', None)
+        new_pwd = generate_password_hash(data.get('password', None))
+        new_op_api = data.get('op_apikey', None)
+        new_printer_config = data.get('printerconfigid', None)
+        new_printer_make = data.get('make', None)
+        new_printer_model = data.get('model', None)
 
         conn = open_db_conn()
         cur = conn.cursor()
