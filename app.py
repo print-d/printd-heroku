@@ -144,10 +144,12 @@ def login():
     query = 'SELECT "Password" FROM "User" WHERE "Username" = \'{}\';'.format(user)
     cur.execute(query)
 
-    # check username
+    # check username. if there is no matching query, then user DNE
     pwd_hash = cur.fetchone()
+    print(pwd_hash)
     if pwd_hash != None:
         pwd_hash = pwd_hash[0]
+        print('we had a password')
     else:
         return Response(response='Invalid username.', status=406)
 
@@ -166,10 +168,13 @@ def login():
         cur.execute(stmt)
         conn.commit()
     except Exception:
+        print('Error: token did not work.')
         response = 'Error: login failed.'
 
     conn.close()
 
+    print(response)
+    print(status)
     return Response(response=response, status=status)
 
 
