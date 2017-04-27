@@ -146,10 +146,8 @@ def login():
 
     # check username. if there is no matching query, then user DNE
     pwd_hash = cur.fetchone()
-    print(pwd_hash)
     if pwd_hash != None:
         pwd_hash = pwd_hash[0]
-        print('we had a password')
     else:
         return Response(response='Invalid username.', status=406)
 
@@ -157,8 +155,7 @@ def login():
     if check_password_hash(pwd_hash, pwd):
         response = 'Successfully logged in!'
     else:
-        response = 'Invalid password.'
-        status = 406
+        return Response(response='Invalid password.', status=406)
 
     # generate new session token & replace
     token = uuid.uuid4()
@@ -233,8 +230,8 @@ def user_data():
 
         new_user = data.get('username', None)
         new_pwd = None
-        if data.get('password'):
-            new_pwd = generate_password_hash(data.get('password'))
+        if data.get('password', None):
+            new_pwd = generate_password_hash(data.get('password', None))
         new_op_api = data.get('op_apikey', None)
         new_printer_config = data.get('printerconfigid', None)
         new_printer_make = data.get('make', None)
@@ -245,32 +242,38 @@ def user_data():
 
         user = authorize_user(token)
         updated = []
-        print(user)
-        print(data)
 
         if new_user:
             return Response(response='Error! Username cannot be changed.', status=406)
 
         # update password
         if new_pwd:
-            stmt = 'UPDATE "User" SET "Password" = \'{}\' WHERE "Username" = \'{}\';'.format(generate_password_hash(new_pwd), user)
+            print(new_pwd)
+            stmt = 'UPDATE "User" SET "Password" = \'{}\' WHERE "Username" = \'{}\';'.format(new_pwd, user)
             cur.execute(stmt)
             updated.append('password')
+            conn.commit()
 
         # update api key
         if new_op_api:
+            print(new_op_api)
             stmt = 'UPDATE "User" SET "OP_APIKey" = \'{}\' WHERE "Username" = \'{}\';'.format(new_op_api, user)
             cur.execute(stmt)
             updated.append('Octoprint API key')
+            conn.commit()
 
         # update printer config file id
         if new_printer_config:
+            print(new_printer_config)
             stmt = 'UPDATE "User" SET "PrinterConfigID" = {} WHERE "Username" = \'{}\';'.format(new_printer_config, user)
             cur.execute(stmt)
             updated.append('printer config id')
+            conn.commit()
 
         # update make/model
         if new_printer_make and new_printer_model:
+            print(new_printer_make)
+            print(new_printer_model)
             query = 'SELECT "ID" FROM "Printer" WHERE "Make" = \'{}\' AND "Model" = \'{}\';'.format(new_printer_make, new_printer_model)
             cur.execute(query)
             printer_id = cur.fetchone()[0]
@@ -278,8 +281,9 @@ def user_data():
             stmt = 'UPDATE "User" SET "PrinterID" = \'{}\' WHERE "Username" = \'{}\';'.format(printer_id, user)
             cur.execute(stmt)
             updated.append('printer make & model')
+            conn.commit()
         
-        conn.commit()
+        # conn.commit()
         conn.close()
         updated = ', '.join(str(x) for x in updated)
         response = 'Successfully updated {}.'.format(updated)
@@ -383,6 +387,7 @@ def get_dimensions():
         'z_size': printer[3]
     }
 
+    print(printer)
     data = json.dumps(printer)
     response = app.response_class(
         response=data,
