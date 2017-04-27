@@ -25,7 +25,6 @@ login_manager.init_app(app)
 # parameters for upload
 ALLOWED_EXTENSIONS = set(['ini', 'json'])
 
-
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
@@ -391,13 +390,10 @@ def get_dimensions():
 @app.route('/configfile/', methods=['GET'])
 def get_config_file():
     token = request.headers.get('Authorization')
+    user = authorize_user(token)
 
     conn = open_db_conn()
     cur = conn.cursor()
-
-    query = 'SELECT "Username" FROM "Session" WHERE "Token" = \'{}\';'.format(token)
-    cur.execute(query)
-    user = cur.fetchone()[0]
 
     query = 'SELECT "PrinterConfigID" FROM "User" WHERE "Username" = \'{}\';'.format(user)
     cur.execute(query)
