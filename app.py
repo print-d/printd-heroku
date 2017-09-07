@@ -71,7 +71,6 @@ def auth_tv():
     # print(tv_token)
 
     # POST https://www.thingiverse.com/login/oauth/tokeninfo
-    # res = resquests.post('https://www.thingiverse.com/login/oauth/tokeninfo?access_token={}'.format(access_token))
     return Response(response=access_token, status=200)
 
 @app.route('/create/', methods=['POST'])
@@ -169,9 +168,7 @@ def login():
         response = 'Error: login failed.'
 
     conn.close()
-
-    print(response)
-    print(status)
+    
     return Response(response=response, status=status)
 
 
@@ -192,12 +189,10 @@ def user_data():
         query = 'SELECT * FROM "User" WHERE "Username" = \'{}\';'.format(user)
         cur.execute(query)
         data = cur.fetchone()
-        print(data)
 
         query = 'SELECT * FROM "Printer" WHERE "ID" = {};'.format(data[5])
         cur.execute(query)
         printer = cur.fetchone()
-        print(printer)
 
         make = printer[4]
         model = printer[5]
@@ -223,7 +218,6 @@ def user_data():
     # if a user is editing their account
     elif request.method == 'POST':
         data = request.json
-        print(data)
 
         if not data:
             return Response(response='Error! No data received.', status=406)
@@ -314,7 +308,6 @@ def upload():
     else:
         error = 'Error: invalid filetype.'
         status = 406
-        # return Response(response='Error: invalid file type.', status=406)
 
     # if we didn't run into any problems, upload to db
     if not error:
@@ -387,13 +380,13 @@ def get_dimensions():
         'z_size': printer[3]
     }
 
-    print(printer)
     data = json.dumps(printer)
     response = app.response_class(
         response=data,
         status=200,
         mimetype='application/json'
     )
+    
     return response
 
 # returns config file multipart of config file associated w/ your printer 
@@ -408,12 +401,10 @@ def get_config_file():
     query = 'SELECT "PrinterConfigID" FROM "User" WHERE "Username" = \'{}\';'.format(user)
     cur.execute(query)
     config_id = cur.fetchone()[0]
-    print(config_id)
 
     query = 'SELECT "ConfigData" FROM "PrinterConfig" WHERE "ID" = {}'.format(config_id)
     cur.execute(query)
     config_file = cur.fetchone()[0]
-    print(config_file)
 
     conn.close()
 
@@ -445,7 +436,6 @@ def get_config_file_list():
         }
         files.append(file) 
 
-    print(files)
     conn.close()
     response = json.dumps(files)
 
